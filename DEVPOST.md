@@ -20,9 +20,9 @@ Bitcoin, Lightning (BOLT11), Next.js, TypeScript, Vercel, Vercel Blob
 
 ## Demo
 
-Live demo: (paste the production URL)
+Live demo: https://tonti-pastorrufus5858-5739s-projects.vercel.app
 
-USSD demo: (production URL)/ussd
+USSD demo: https://tonti-pastorrufus5858-5739s-projects.vercel.app/ussd
 
 Public circle code: SANDAGA
 

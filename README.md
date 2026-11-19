@@ -4,7 +4,7 @@ Tonti is a Lightning wallet and rotating savings circle for tontines (and susu g
 
 This demo runs on a **Lightning test network**. There are no real bitcoin and no mainnet funds. Invoices use the standard BOLT11 format and are settled by Tonti's test node.
 
-Live demo: add the URL here after deploy.
+Live demo: https://tonti-pastorrufus5858-5739s-projects.vercel.app
 
 ## Why this exists
 
