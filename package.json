@@ -1,0 +1,29 @@
+{
+  "name": "tonti",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lightning tontines for West Africa — a test-network wallet and rotating savings circle.",
+  "author": "Rufus Worlanyo",
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.9.0",
+    "bolt11": "^1.4.1",
+    "next": "^15.5.6",
+    "qrcode": "^1.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.8",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "^5.9.2"
+  }
+}

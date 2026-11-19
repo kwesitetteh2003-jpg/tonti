@@ -1,0 +1,10 @@
+{
+  "name": "Tonti",
+  "short_name": "Tonti",
+  "description": "Lightning tontines for West Africa",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f3eee4",
+  "theme_color": "#f3eee4",
+  "lang": "fr"
+}
