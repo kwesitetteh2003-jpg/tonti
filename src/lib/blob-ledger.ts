@@ -30,6 +30,12 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function normalizeEtag(etag?: string): string | undefined {
+  if (!etag) return undefined;
+  const trimmed = etag.replace(/^W\//i, "").replaceAll('"', "").trim();
+  return trimmed || undefined;
+}
+
 function isConflict(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   const status =
@@ -59,7 +65,7 @@ async function readSnapshot(): Promise<{ snapshot: Snapshot; etag?: string } | n
   const events = Array.isArray(parsed.events) ? parsed.events.filter((event) => event?.id && event?.type) : [];
   return {
     snapshot: { revision: Number(parsed.revision) || events.length, events },
-    etag: result.blob?.etag,
+    etag: normalizeEtag(result.blob?.etag),
   };
 }
 
@@ -70,7 +76,7 @@ async function writeSnapshot(snapshot: Snapshot, etag?: string): Promise<void> {
     addRandomSuffix: false,
     contentType: "application/json",
     allowOverwrite: true,
-    ...(etag ? { ifMatch: etag } : {}),
+    ...(normalizeEtag(etag) ? { ifMatch: normalizeEtag(etag) } : {}),
     ...blobOptions(),
   });
 }
@@ -180,14 +186,10 @@ export async function appendBlobEvents(events: LedgerEvent[]): Promise<LedgerEve
 
     const next: Snapshot = { revision: current.snapshot.revision + 1, events: merged };
     try {
-      await writeSnapshot(next, current.etag);
       for (const event of fresh) {
-        try {
-          await writeEventObject(event);
-        } catch {
-          // The snapshot is the source of truth; event files are a backup.
-        }
+        await writeEventObject(event);
       }
+      await writeSnapshot(next, current.etag);
       const verified = await readSnapshot();
       if (verified && fresh.every((event) => verified.snapshot.events.some((item) => item.id === event.id))) {
         return verified.snapshot.events;
@@ -199,6 +201,16 @@ export async function appendBlobEvents(events: LedgerEvent[]): Promise<LedgerEve
     await sleep(40 * (attempt + 1));
   }
 
+  // Last resort: merge a fresh uncached read and overwrite the snapshot.
+  // Unique event files have already been written when possible.
+  const fallback = (await readSnapshot()) ?? { snapshot: { revision: 0, events: [] }, etag: undefined };
+  const merged = mergeEvents(fallback.snapshot.events, fresh);
+  const next: Snapshot = { revision: fallback.snapshot.revision + 1, events: merged };
+  await writeSnapshot(next);
+  const verified = await readSnapshot();
+  if (verified && fresh.every((event) => verified.snapshot.events.some((item) => item.id === event.id))) {
+    return verified.snapshot.events;
+  }
   throw lastError instanceof Error
     ? lastError
     : new Error("Could not confirm the ledger write.");
