@@ -1004,6 +1004,7 @@ function Settings({
   const [name, setName] = useState(wallet.displayName);
   const [pin, setPin] = useState("");
   const [copied, setCopied] = useState(false);
+  const [showKey, setShowKey] = useState(false);
   return (
     <section className="card stack">
       <h2>{t.settings}</h2>
@@ -1031,17 +1032,23 @@ function Settings({
       </button>
       <label>
         {t.backup}
-        <div className="invoice">{secret}</div>
+        <div className="invoice" aria-hidden={!showKey}>
+          {showKey ? secret : "••••••••••••••••••••••••••••••••"}
+        </div>
       </label>
       <p className="hint">{t.backupHint}</p>
+      <button type="button" className="btn secondary" onClick={() => setShowKey((open) => !open)}>
+        {showKey ? t.hideKey : t.showKey}
+      </button>
       <button
+        type="button"
         className="btn secondary"
         onClick={async () => {
           await navigator.clipboard.writeText(secret);
           setCopied(true);
         }}
       >
-        {copied ? t.copied : t.copyInvoice}
+        {copied ? t.copied : t.copyKey}
       </button>
       <a className="btn secondary" href="/ussd">{t.ussd}</a>
       <p className="hint">{t.ussdHint}</p>

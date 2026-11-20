@@ -11,14 +11,13 @@ import {
   MIN_SEATS,
 } from "./ledger";
 import { createInvoice, decodeInvoice } from "./lightning";
-import { loadBlobEvents, publishBlobEvent } from "./blob-ledger";
+import { appendBlobEvents, loadBlobEvents } from "./blob-ledger";
 import type { Frequency, LedgerEvent, LedgerState } from "./types";
 
 const DATA_DIR = process.env.TONTI_DATA_DIR || path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "ledger.json");
 
 let memory = emptyState();
-let loaded = false;
 let queue: Promise<void> = Promise.resolve();
 
 function run<T>(fn: () => Promise<T>): Promise<T> {
@@ -31,14 +30,14 @@ function run<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 async function ensureLoaded() {
-  if (loaded) return;
+  // Reload from the shared store on every queued request so each serverless
+  // instance sees writes made by the others.
   const fileEvents = await readFileEvents();
   const blobEvents = await loadBlobEvents();
   const merged = mergeEvents(fileEvents, blobEvents);
   let state = emptyState();
   for (const event of merged) state = applyEvent(state, event);
   memory = state;
-  loaded = true;
   const seed = seedSandaga().filter((event) => !memory.eventIds[event.id]);
   if (seed.length) await applyAndPersist(seed);
 }
@@ -59,30 +58,30 @@ async function readFileEvents(): Promise<LedgerEvent[]> {
   }
 }
 
-async function persist(event: LedgerEvent) {
+async function persistFile(events: LedgerEvent[]) {
   try {
     const existing = await readFileEvents();
-    if (!existing.some((item) => item.id === event.id)) {
-      await mkdir(DATA_DIR, { recursive: true });
-      existing.push(event);
-      await writeFile(
-        DATA_FILE,
-        JSON.stringify({ events: existing }, null, 2),
-        "utf8"
-      );
-    }
+    const merged = mergeEvents(existing, events);
+    if (merged.length === existing.length) return;
+    await mkdir(DATA_DIR, { recursive: true });
+    await writeFile(DATA_FILE, JSON.stringify({ events: merged }, null, 2), "utf8");
   } catch {
     // File persistence is best-effort on serverless runtimes.
   }
-  await publishBlobEvent(event);
 }
 
 async function applyAndPersist(events: LedgerEvent[]) {
-  for (const event of events) {
-    if (memory.eventIds[event.id]) continue;
-    memory = applyEvent(memory, event);
-    await persist(event);
+  const fresh = events.filter((event) => !memory.eventIds[event.id]);
+  if (!fresh.length) return;
+  await persistFile(fresh);
+  const shared = await appendBlobEvents(fresh);
+  if (shared) {
+    let state = emptyState();
+    for (const event of shared) state = applyEvent(state, event);
+    memory = state;
+    return;
   }
+  for (const event of fresh) memory = applyEvent(memory, event);
 }
 
 export function seedSandaga(): LedgerEvent[] {

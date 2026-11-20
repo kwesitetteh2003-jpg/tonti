@@ -68,6 +68,9 @@ export const copy = {
     backup: "Wallet key",
     backupHint:
       "This key is the only way to restore this wallet. Keep it on this phone. Never share it.",
+    showKey: "Show key",
+    hideKey: "Hide key",
+    copyKey: "Copy key",
     logout: "Remove wallet from this phone",
     emptyActivity: "No payments yet. Get test sats to start.",
     demoTitle: "Try it in two minutes",
@@ -156,6 +159,9 @@ export const copy = {
     backup: "Clé du portefeuille",
     backupHint:
       "Cette clé est le seul moyen de restaurer ce portefeuille. Gardez-la sur ce téléphone. Ne la partagez pas.",
+    showKey: "Afficher la clé",
+    hideKey: "Masquer la clé",
+    copyKey: "Copier la clé",
     logout: "Retirer le portefeuille de ce téléphone",
     emptyActivity: "Aucun paiement pour le moment. Commencez par recevoir des sats de test.",
     demoTitle: "À essayer en deux minutes",

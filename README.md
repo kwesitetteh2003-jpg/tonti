@@ -61,7 +61,7 @@ builds the production app.
 - Each wallet is a 32-byte key stored only on the phone. The server stores a hash of that key, never the key itself.
 - Payments are BOLT11 invoices signed by the Tonti test node and settled on the test ledger.
 - Tontine contributions go to a system escrow wallet, then pay out in a single Lightning payment when the round is complete.
-- The ledger is event-sourced. Events are written to a local JSON file in development and to a private Vercel Blob store in production, so two phones can share the same test network.
+- The ledger is event-sourced. Events are written to a local JSON file in development and to a private Vercel Blob snapshot in production (`tonti/ledger.json`), read from origin storage with no CDN cache, so two phones share the same test network.
 
 ## Security notes
 
